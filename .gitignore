@@ -235,3 +235,5 @@ modules.xml
 *.ipr
 
 # End of https://www.toptal.com/developers/gitignore/api/django,pycharm+iml
+/.idea/vcs.xml
+/.idea/inspectionProfiles/profiles_settings.xml
