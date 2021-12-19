@@ -1,7 +1,6 @@
 from django.core.validators import MaxValueValidator, MinValueValidator
 from django.db import models
-
-from accounts.models import User
+from django.db.models import Q
 
 
 class TaskManager(models.Manager):
@@ -13,9 +12,7 @@ class TaskManager(models.Manager):
 
     def all_related_tasks_to_user(self, user):
         return self.filter(
-            state='P',
-            charity__user=user,
-            assigned_benefactor__user=user
+            Q(state='P') | Q(charity__user=user) | Q(assigned_benefactor__user=user)
         )
 
 
@@ -64,7 +61,7 @@ class Task(models.Model):
     state = models.CharField(max_length=1, choices=STATE, default='P')
     title = models.CharField(max_length=60)
 
-    object = TaskManager()
+    objects = TaskManager()
 
     def __str__(self):
         return self.title
