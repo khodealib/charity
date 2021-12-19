@@ -4,33 +4,40 @@ from django.db import models
 from accounts.models import User
 
 
-class BenefactorManager(models.Manager):
-    def related_tasks_to_benefactor(self):
-        return Task.objects.filter(assigned_benefactor=self)
+class TaskManager(models.Manager):
+    def related_tasks_to_charity(self, user):
+        return self.filter(charity__user=user)
 
+    def related_tasks_to_benefactor(self, user):
+        return self.filter(assigned_benefactor__user=user)
 
-class CharityManager(models.Model):
-    def related_tasks_to_charity(self):
-        return Task.objects.filter(charity=self)
+    def all_related_tasks_to_user(self, user):
+        return self.filter(
+            state='P',
+            charity__user=user,
+            assigned_benefactor__user=user
+        )
 
 
 class Benefactor(models.Model):
-    user = models.OneToOneField(User, models.CASCADE)
+    user = models.OneToOneField('accounts.User', models.CASCADE)
     experience = models.SmallIntegerField(default=0, validators=[MaxValueValidator(2), MinValueValidator(0)])
     free_time_per_week = models.PositiveSmallIntegerField(default=0)
 
-    object = BenefactorManager()
+    def related_tasks_to_benefactor(self):
+        return Task.objects.related_tasks_to_benefactor(self.user)
 
     def __str__(self):
         return self.user.get_full_name()
 
 
 class Charity(models.Model):
-    user = models.OneToOneField(User, models.CASCADE)
+    user = models.OneToOneField('accounts.User', models.CASCADE)
     name = models.CharField(max_length=50)
     reg_number = models.CharField(max_length=10)
 
-    object = CharityManager()
+    def related_tasks_to_charity(self):
+        return Task.objects.related_tasks_to_charity(self.user)
 
     def __str__(self):
         return self.name
@@ -56,6 +63,8 @@ class Task(models.Model):
     gender_limit = models.CharField(max_length=1, choices=GENDER, null=True, blank=True)
     state = models.CharField(max_length=1, choices=STATE, default='P')
     title = models.CharField(max_length=60)
+
+    object = TaskManager()
 
     def __str__(self):
         return self.title
