@@ -4,7 +4,7 @@ from .models import User
 
 
 class UserSerializer(serializers.ModelSerializer):
-    gender = serializers.ChoiceField(choices=User.Gender.choices, default=User.Gender.UNSET)
+    password = serializers.CharField(write_only=True)
 
     class Meta:
         model = User
@@ -18,5 +18,9 @@ class UserSerializer(serializers.ModelSerializer):
             'description',
             'first_name',
             'last_name',
-            'email'
+            'email',
         )
+
+    def create(self, validated_data):
+        user = User.objects.create_user(**validated_data)
+        return user

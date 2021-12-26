@@ -12,11 +12,23 @@ from charities.serializers import (
 
 
 class BenefactorRegistration(APIView):
-    pass
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = BenefactorSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class CharityRegistration(APIView):
-    pass
+    permission_classes = (IsAuthenticated,)
+
+    def post(self, request):
+        serializer = CharitySerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        serializer.save(user=request.user)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
 
 class Tasks(generics.ListCreateAPIView):
@@ -30,10 +42,10 @@ class Tasks(generics.ListCreateAPIView):
             **request.data,
             "charity_id": request.user.charity.id
         }
-        serializer = self.serializer_class(data = data)
-        serializer.is_valid(raise_exception = True)
+        serializer = self.serializer_class(data=data)
+        serializer.is_valid(raise_exception=True)
         serializer.save()
-        return Response(serializer.data, status = status.HTTP_201_CREATED)
+        return Response(serializer.data, status=status.HTTP_201_CREATED)
 
     def get_permissions(self):
         if self.request.method in SAFE_METHODS:
@@ -59,12 +71,48 @@ class Tasks(generics.ListCreateAPIView):
 
 
 class TaskRequest(APIView):
-    pass
+    permission_classes = (IsBenefactor,)
+
+    def get(self, request, task_id, **kwargs):
+        task = get_object_or_404(Task, id=task_id)
+        if task.state != Task.TaskStatus.PENDING:
+            message = 'This task is not pending.'
+            return Response(data={'detail': message}, status=status.HTTP_404_NOT_FOUND)
+
+        task.assign_to_benefactor(request.user.benefactor)
+
+        return Response(data={'detail': 'Request sent.'}, status=status.HTTP_200_OK)
 
 
 class TaskResponse(APIView):
-    pass
+    permission_classes = (IsCharityOwner,)
+
+    def post(self, request, task_id):
+        response = request.data.get('response')
+        if response not in ['A', 'R']:
+            message = 'Required field ("A" for accepted / "R" for rejected)'
+            return Response(data={'detail': message}, status=status.HTTP_400_BAD_REQUEST)
+
+        task = get_object_or_404(Task, id=task_id, charity=request.user.charity)
+        if task.state != Task.TaskStatus.WAITING:
+            message = 'This task is not waiting.'
+            return Response(data={'detail': message}, status=status.HTTP_404_NOT_FOUND)
+
+        task.response_to_benefactor_request(response)
+
+        return Response(data={'detail': 'Response sent.'}, status=status.HTTP_200_OK)
 
 
 class DoneTask(APIView):
-    pass
+    permission_classes = (IsCharityOwner,)
+
+    def post(self, request, task_id):
+        task = get_object_or_404(Task, id=task_id, charity=request.user.charity)
+        if task.state != Task.TaskStatus.ASSIGNED:
+            message = 'Task is not assigned yet.'
+            return Response(data={'detail': message}, status=status.HTTP_404_NOT_FOUND)
+
+        task.done()
+
+        message = 'Task has been done successfully.'
+        return Response(data={'detail': message}, status=status.HTTP_200_OK)

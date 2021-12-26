@@ -20,13 +20,5 @@ class LogoutAPIView(APIView):
 
 class UserRegistration(generics.CreateAPIView):
     permission_classes = (AllowAny,)
+    authentication_classes = []
     serializer_class = UserSerializer
-
-    def post(self, request, *args, **kwargs):
-        user_serializer = self.get_serializer(data=request.data)
-        if user_serializer.is_valid():
-            username = user_serializer.validated_data['username']
-            user_serializer.save()
-            return Response(
-                data={'message': '{} is created'.format(username)}
-            )

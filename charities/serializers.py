@@ -5,11 +5,45 @@ from .models import Charity, Task
 
 
 class BenefactorSerializer(serializers.ModelSerializer):
-    pass
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Benefactor
+        fields = (
+            'user',
+            'experience',
+            'free_time_per_week',
+        )
+
+    def save(self, **kwargs):
+        """
+        kwargs should contain `user` object
+        it should be evaluated from AuthToken
+        """
+        user = kwargs.get('user')
+        assert user is not None, "`user` is None"
+        return super().save(user=user)
 
 
 class CharitySerializer(serializers.ModelSerializer):
-    pass
+    user = serializers.PrimaryKeyRelatedField(read_only=True)
+
+    class Meta:
+        model = Charity
+        fields = (
+            'user',
+            'name',
+            'reg_number',
+        )
+
+    def save(self, **kwargs):
+        """
+        kwargs should contain `user` object
+        it should be evaluated from AuthToken
+        """
+        user = kwargs.get('user')
+        assert user is not None, "`user` is None"
+        return super().save(user=user)
 
 
 class TaskSerializer(serializers.ModelSerializer):
