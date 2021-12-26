@@ -1,7 +1,18 @@
 from django.contrib import admin
 
-from charities.models import Charity, Benefactor, Task
+from .models import Benefactor, Charity, Task
 
-admin.site.register(Charity)
-admin.site.register(Benefactor)
-admin.site.register(Task)
+
+@admin.register(Benefactor)
+class BenefactorAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Charity)
+class CharityAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(Task)
+class TaskAdmin(admin.ModelAdmin):
+    pass

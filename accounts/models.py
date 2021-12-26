@@ -1,19 +1,25 @@
 from django.contrib.auth.models import AbstractUser
 from django.db import models
 
-from charities.models import Task
+from .validators import phone_validator
 
 
 class User(AbstractUser):
-    GENDER = (
-        ('F', 'Female'),
-        ('M', 'Male'),
-    )
-    address = models.TextField(blank=True, null=True)
-    age = models.PositiveSmallIntegerField(null=True, blank=True)
-    description = models.TextField(blank=True, null=True)
-    gender = models.CharField(max_length=1, choices=GENDER, blank=True, null=True)
-    phone = models.CharField(max_length=15, blank=True, null=True)
+    class Gender(models.TextChoices):
+        MALE = 'M', 'Male'
+        FEMALE = 'F', 'Female'
+        UNSET = 'MF', 'Unset'
 
-    def all_related_tasks_to_user(self):
-        return Task.objects.all_related_tasks_to_user(self)
+    phone = models.CharField(max_length=15, validators=[phone_validator], blank=True)
+    address = models.TextField(blank=True)
+    gender = models.CharField(max_length=2, choices=Gender.choices, default=Gender.UNSET)
+    age = models.PositiveSmallIntegerField(blank=True, null=True)
+    description = models.TextField(blank=True)
+
+    @property
+    def is_benefactor(self):
+        return hasattr(self, 'benefactor')
+
+    @property
+    def is_charity(self):
+        return hasattr(self, 'charity')

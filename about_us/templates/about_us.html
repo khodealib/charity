@@ -4,8 +4,10 @@
     <h2 class="text-center my-5">نیکوکاران و اعضای خیریه‌ها</h2>
     <div class="container">
         <div class="d-flex flex-wrap justify-content-around">
-            {% for user in users %}
-                <div>{{ user.get_full_name }}</div>
+            {% for member in members %}
+                <div id="{{ member.username }}" class="p-3">
+                    {{ member.get_full_name }}
+                </div>
             {% endfor %}
         </div>
     </div>

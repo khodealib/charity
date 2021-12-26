@@ -3,7 +3,7 @@ from django.shortcuts import render
 
 
 def about_us(request):
-    if request.method == 'GET':
-        users = get_user_model().objects.all()
-        content = {'users': users}
-        return render(request, 'about_us.html', content)
+    context = {
+        'members': get_user_model().objects.all()
+    }
+    return render(request, 'about_us.html', context)
